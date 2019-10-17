@@ -1,0 +1,80 @@
+VERSION
+7
+
+COMMSETTINGS
+0
+62
+4
+115200
+2
+63
+4
+0
+1
+
+COMMDISPLAY
+0
+
+SEND
+0
+reset
+F0
+0
+5
+
+SEND
+1
+dr
+FE
+0
+5
+
+SEND
+2
+count
+F0 F0 F0 F0 F0 F0 F0
+0
+5
+
+SEND
+3
+RST
+52 53 54
+0
+5
+
+SEND
+4
+start
+53 54 52
+0
+1.5
+
+SEND
+5
+GetRes
+47 45 54
+0
+5
+
+SEND
+6
+Get ROM
+52 4F 4D
+0
+5
+
+SEND
+7
+Disable TEMP
+44 49 53
+0
+5
+
+SEND
+8
+ENA Temp
+45 4E 41
+0
+5
+
