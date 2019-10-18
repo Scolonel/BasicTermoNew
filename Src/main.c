@@ -217,6 +217,10 @@ int main(void)
       SSD1306_GotoXY(0,18*i);
       SSD1306_Puts((void*)Str, &Font_11x18, 1);
     }
+  sprintf((char*)Str,"%d",CntVrm) ;
+  SSD1306_GotoXY(100,0);
+  SSD1306_Puts((void*)Str, &Font_7x10, 1);
+    
     SSD1306_UpdateScreen();
     HAL_Delay(150);
     /* USER CODE END WHILE */
