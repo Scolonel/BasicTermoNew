@@ -107,6 +107,8 @@ void CheckRxVCP (uint16_t Size);
 uint8_t GetKeyStat (uint8_t Num);
 // цикл измерения температуры
 float GetTemp(void);
+// поиск приборов по новому
+void SrDev (void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -123,10 +125,9 @@ int main(void)
   /* USER CODE BEGIN 1 */
   SSD1306_I2C_ADDR = 0x78;
 	uint8_t dt[8];
-	uint16_t raw_temper;
+	volatile static uint16_t raw_temper;
 	float temper;
-	char c;
-	uint8_t i;
+    volatile uint8_t CntVrm=0;
 
   /* USER CODE END 1 */
   
@@ -179,6 +180,8 @@ int main(void)
 	}
  
   SSD1306_UpdateScreen();
+  
+  
   // пустое чтение для инициализации приемеов!
   //Dummy = huart1.Instance->DR ;
   
@@ -216,23 +219,18 @@ int main(void)
     }
     SSD1306_UpdateScreen();
     HAL_Delay(150);
-    if(g_EnaTemp)
-    {
-      // чистим строчку вывода
-      sprintf((char*)Str,"             ") ;
-      SSD1306_GotoXY(0,16);
-      SSD1306_Puts((void*)Str, &Font_11x18, 1);
-      sprintf((char*)Str,"O=%.1f",GetTemp()) ;
-      
-      // Выводим что приняли
-      SSD1306_GotoXY(0,16);
-      SSD1306_Puts((void*)Str, &Font_11x18, 1);
-      SSD1306_UpdateScreen();
-    }
     /* USER CODE END WHILE */
     
     /* USER CODE BEGIN 3 */
-    
+  // счетчик времени для перезапуска прибора
+      HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
+
+  if(CntVrm++ == 0) 
+  {
+    HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+    SrDev();
+  }
+      
   }
   /* USER CODE END 3 */
 }
@@ -344,7 +342,24 @@ float GetTemp(void)
     return (Temp/8)*0.5  ;
 
 }
-
+// поиск приборов по новому
+void SrDev (void)
+{
+  Dev_Cnt = 0;
+  HAL_Delay(300);
+  ds18b20_init(1);
+  sprintf((char*)Str,"%d",Dev_Cnt) ;
+  SSD1306_GotoXY(110,53);
+  SSD1306_Puts((void*)Str, &Font_7x10, 1);
+  for(int i=0;i<Dev_Cnt;i++)
+  {
+    sprintf((char*)Str,"%02X%02X%02X%02X%02X%02X%02X%02X",
+			Dev_ID[i][0], Dev_ID[i][1], Dev_ID[i][2], Dev_ID[i][3],
+			Dev_ID[i][4], Dev_ID[i][5], Dev_ID[i][6], Dev_ID[i][7]);
+    SSD1306_GotoXY(0,37+i*8);
+    SSD1306_Puts((void*)Str, &Font_7x10, 1);
+  }
+}
 
 void CheckRxVCP (uint16_t Size)
 {
