@@ -122,6 +122,11 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   SSD1306_I2C_ADDR = 0x78;
+	uint8_t dt[8];
+	uint16_t raw_temper;
+	float temper;
+	char c;
+	uint8_t i;
 
   /* USER CODE END 1 */
   
@@ -152,17 +157,27 @@ int main(void)
   HAL_TIM_PWM_Start (&htim2, TIM_CHANNEL_2 ); // вроде как надо запустить таймеры
   // init oled
   uint8_t res = SSD1306_Init();
-  sprintf((char*)Str,"HELLO! ver 4.0") ;
+  sprintf((char*)Str,"HELLO! ver 5.0") ;
   //1.0 - принимает команды из линии и детектирует их, выводит построчно на экран
-  SSD1306_GotoXY(5,0);
+  SSD1306_GotoXY(0,53);
   SSD1306_Puts((void*)Str, &Font_7x10, 1);
   SSD1306_UpdateScreen();
  // получим состо€ние датчиков 
   //port_init();
+  HAL_Delay(300);
   ds18b20_init(1);
   sprintf((char*)Str,"%d",Dev_Cnt) ;
-  SSD1306_GotoXY(105,0);
+  SSD1306_GotoXY(110,53);
   SSD1306_Puts((void*)Str, &Font_7x10, 1);
+  	for(int i=0;i<Dev_Cnt;i++)
+	{
+		sprintf((char*)Str,"%02X%02X%02X%02X%02X%02X%02X%02X",
+			Dev_ID[i][0], Dev_ID[i][1], Dev_ID[i][2], Dev_ID[i][3],
+			Dev_ID[i][4], Dev_ID[i][5], Dev_ID[i][6], Dev_ID[i][7]);
+  SSD1306_GotoXY(0,37+i*8);
+  SSD1306_Puts((void*)Str, &Font_7x10, 1);
+	}
+ 
   SSD1306_UpdateScreen();
   // пустое чтение дл€ инициализации приемеов!
   //Dummy = huart1.Instance->DR ;
@@ -178,39 +193,46 @@ int main(void)
       CheckRxVCP (CountCmd);
       CountCmd = 0;
     }
-    if(GetKeyStat(3) != StartKeys)// что то в переключател€х помен€лось
+    for(int i=0;i<Dev_Cnt;i++)
     {
-  // чистим строчку вывода
-  sprintf((char*)Str,"   ") ;
-	SSD1306_GotoXY(105,0);
-	SSD1306_Puts((void*)Str, &Font_7x10, 1);
-  StartKeys = GetKeyStat(3);
-  sprintf((char*)Str,"%d",StartKeys) ;
-    
-  // ¬ыводим что прин€ли
-  SSD1306_GotoXY(105,0);
-  SSD1306_Puts((void*)Str, &Font_7x10, 1);
-  SSD1306_UpdateScreen();
- //
-
+      ds18b20_MeasureTemperCmd(NO_SKIP_ROM, i);
     }
+    HAL_Delay(800);
+    for(int i=0;i<Dev_Cnt;i++)
+    {
+      ds18b20_ReadStratcpad(NO_SKIP_ROM, dt, i);
+      raw_temper = ((uint16_t)dt[1]<<8)|dt[0];
+      //if(ds18b20_GetSign(raw_temper)) c='-';
+      //else c='+';
+      temper = ds18b20_Convert(raw_temper);
+      sprintf((char*)Str,"             ") ;
+      SSD1306_GotoXY(0,18*i);
+      SSD1306_Puts((void*)Str, &Font_11x18, 1);
+      sprintf((char*)Str,"%c=%.1f",(i)?('I'):('0'), temper) ;
+      //sprintf((char*)Str,"%c=%c%.1f",(i)?('I'):('0'),c, temper) ;
+      // ¬ыводим что прин€ли
+      SSD1306_GotoXY(0,18*i);
+      SSD1306_Puts((void*)Str, &Font_11x18, 1);
+    }
+    SSD1306_UpdateScreen();
+    HAL_Delay(150);
     if(g_EnaTemp)
     {
-    // чистим строчку вывода
-  sprintf((char*)Str,"             ") ;
-	SSD1306_GotoXY(0,16);
-	SSD1306_Puts((void*)Str, &Font_16x26, 1);
-  sprintf((char*)Str,"O=%.1f",GetTemp()) ;
-    
-  // ¬ыводим что прин€ли
-  SSD1306_GotoXY(0,16);
-  SSD1306_Puts((void*)Str, &Font_16x26, 1);
-  SSD1306_UpdateScreen();
+      // чистим строчку вывода
+      sprintf((char*)Str,"             ") ;
+      SSD1306_GotoXY(0,16);
+      SSD1306_Puts((void*)Str, &Font_11x18, 1);
+      sprintf((char*)Str,"O=%.1f",GetTemp()) ;
+      
+      // ¬ыводим что прин€ли
+      SSD1306_GotoXY(0,16);
+      SSD1306_Puts((void*)Str, &Font_11x18, 1);
+      SSD1306_UpdateScreen();
     }
     /* USER CODE END WHILE */
-
+    
     /* USER CODE BEGIN 3 */
-
+    
   }
   /* USER CODE END 3 */
 }

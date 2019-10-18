@@ -209,6 +209,7 @@ uint8_t ds18b20_init(uint8_t mode)
 		//if(ds18b20_Reset()) return 1;
 		for(i=1;i<=8;i++)
 		{
+          HAL_Delay(200);
 			if(ds18b20_SearhRom(dt))
 			{
 				Dev_Cnt++;
@@ -232,7 +233,7 @@ uint8_t ds18b20_init(uint8_t mode)
 			//TL REGISTER - 30 градусов
 			ds18b20_WriteByte(0x9E);
 			//Resolution 12 bit
-			ds18b20_WriteByte(RESOLUTION_12BIT);
+			ds18b20_WriteByte(RESOLUTION_9BIT);
 		}
 	}
   return 0;
@@ -253,7 +254,7 @@ void ds18b20_MeasureTemperCmd(uint8_t mode, uint8_t DevNum)
 		ds18b20_WriteByte(0x55);
 		for(i=0;i<=7;i++)
 		{
-			ds18b20_WriteByte(Dev_ID[DevNum-1][i]);
+			ds18b20_WriteByte(Dev_ID[DevNum][i]);
 		}
 	}
   //CONVERT T
@@ -275,7 +276,7 @@ void ds18b20_ReadStratcpad(uint8_t mode, uint8_t *Data, uint8_t DevNum)
 		ds18b20_WriteByte(0x55);
 		for(i=0;i<=7;i++)
 		{
-			ds18b20_WriteByte(Dev_ID[DevNum-1][i]);
+			ds18b20_WriteByte(Dev_ID[DevNum][i]);
 		}
 	}
   //READ SCRATCHPAD
@@ -296,9 +297,12 @@ uint8_t ds18b20_GetSign(uint16_t dt)
 float ds18b20_Convert(uint16_t dt)
 {
   float t;
-  t = (float) ((dt&0x07FF)>>4); //отборосим знаковые и дробные биты
+  
+  //t = (float) ((dt&0x07FF)>>4); //отборосим знаковые и дробные биты
   //ѕрибавим дробную часть
-  t += (float)(dt&0x000F) / 16.0f;
+  //t += (float)(dt&0x000F) / 16.0f;
+   
+    t = (dt/8)*0.5  ;
   return t;
 }
 //----------------------------------------------------------
